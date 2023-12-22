@@ -1,3 +1,4 @@
+const path = require('path');
 const middleware = require("./utils/middleware.js")
 const rateLimiters = require("./utils/rateLimitMiddleware.js")
 const helmet = require("helmet")
@@ -12,12 +13,18 @@ const config = require("./utils/config.js")
 // initiliaze an express application.
 const app = express()
 
-app.get("/", (req, res) => {
-  res.send('<h1>Welcome to our starter api for my bloglist app.</h1>')
-})
 app.use(cors())
 app.use(express.json())
+app.use(express.static('dist'))
 app.use(helmet())
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "img-src": ["'self'", "https: data:"]
+    }
+  })
+)
 
 // connect to our mongo database.
 const mongoUrl = config.MONGODB_URL
@@ -31,9 +38,13 @@ mongoose.connect(mongoUrl).then(() => {
 
 app.use(rateLimiters.globalLimiter)
 app.use(middleware.requestLogger)
-app.use("/api/blogs", blogRouter)
-app.use("/api/users", userRouter)
-app.use("/api/login", loginRouter)
+app.use("/blogs", blogRouter)
+app.use("/users", userRouter)
+app.use("/login", loginRouter)
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
