@@ -13,6 +13,7 @@ const config = require("./utils/config.js")
 // initiliaze an express application.
 const app = express()
 
+// fixes express-rate-limiter when deploying from a proxy
 app.set('trust proxy', 1);
 
 app.use(cors())
