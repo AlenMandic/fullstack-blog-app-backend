@@ -1,11 +1,17 @@
-// route for creating new blogs, verifying which user the blog belongs to, and making sure only logged in users ( bearer with JWT token is present in request header ) can create and manipulate blogs.
 const blogRouter = require('express').Router()
 const Blog = require("../models/blog")
 const User = require("../models/user")
 const middleware = require("../utils/middleware")
 
 blogRouter.get("/", async (req, res) => {
-  const blogs = await Blog.find({}).populate('userId', { username: 1, name: 1 })
+
+  let { page, limit } = req.query
+  const skip = (page - 1) * limit  // pagination skipper.
+
+  page = parseInt(page) || 1
+  limit = parseInt(limit) || 5
+
+  const blogs = await Blog.find({}).populate('userId', { username: 1, name: 1 }).skip(skip).limit(limit)
 
   res.json(blogs)
 })
