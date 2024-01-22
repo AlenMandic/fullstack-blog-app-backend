@@ -34,6 +34,7 @@ loginRouter.post('/', async (req, res, next) => {
 
     // if all of the above is good, let's send back a status of 200, and the token itself so we can use it on the front-end to verify requests. This is a succesfull login and the front-end has their token.
     return res.status(200).send({ token, username: user.username, name: user.name, id: user._id })
+
   } catch(err) {
     next(err)
   }

@@ -23,7 +23,6 @@ const requestLogger = (request, response, next) => {
 const userExtractor = async (request, response, next) => {
 
   try {
-    console.log('User extractor middleware for authenticating users running.')
     const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
     console.log("Decoded token for user: ", decodedToken.username)
 
@@ -49,13 +48,12 @@ const unknownEndpoint = (request, response) => {
   response.status(404).send('<h2>Unknown endpoint!</h2>')
 }
 
-// need to check if all errors are working for password/username validators
 const errorHandler = (error, req, res, next) => {
   console.log(error.name)
   console.log(error.message)
 
   if(error.name === 'CastError') {
-    res.status(400).send('Invalid or non-existant ID')
+    return res.status(400).send('Invalid or non-existant ID')
   } else if (error.name === 'ValidationError') {
     return res.status(400).send({ error: error.message })
   } else if (error.name === 'JsonWebTokenError') {

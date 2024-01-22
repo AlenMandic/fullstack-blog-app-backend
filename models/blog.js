@@ -1,5 +1,18 @@
 const mongoose = require('mongoose')
 
+const commentSchema = new mongoose.Schema({
+  postedBy: {
+    username: String,
+    id: String,
+  },
+  commentContent: {
+    type: String,
+    required: true,
+    minLength: 3,
+    maxLength: 200
+  },
+});
+
 // every new blog created will have a reference to the user who created it, by giving it that user's ID.
 const blogSchema = new mongoose.Schema({
   title: {
@@ -25,10 +38,11 @@ const blogSchema = new mongoose.Schema({
     username: String,
     id: String,
   },
-  userId: { // user this blog belongs to!
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user' // Indicates that this userId property points to 'User' model data. We can then do .populate('userId') to return every single User document instead of just the ID's.
-  }
+    ref: 'user' // references the 'User' model via the ID
+  },
+  comments: [commentSchema]
 })
 
 // return prettier data for us to use. Prettify the 'id' by extracting just the raw number id as a string, and remove the __v key from mongodb.

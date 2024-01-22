@@ -12,19 +12,24 @@ function isStrongPassword(ourPassword) {
 }
 
 userRouter.get('/', async (req, res) => {
+
   const ourUsers = await User.find({}).populate('blogs', { title: 1, author: 1, url: 1, likes: 1 })
-  res.json(ourUsers)
+  return res.json(ourUsers)
+
 })
 
 userRouter.get('/:id', async (req, res, next) => {
+
   try {
     const id = req.params.id
 
-    const result = await User.findById(id).populate('blogs', { title: 1, author: 1, url: 1, likes: 1 })
+    const result = await User.findById(id).populate('blogs')
+
     if(result !== null) {
-      res.json(result)
+      return res.json(result)
     }
-    res.status(404).send('Error: Invalid ID')
+
+    return res.status(404).send('Error: Invalid ID')
 
   } catch(err) {
     next(err)
@@ -38,10 +43,8 @@ userRouter.get('/:id/likes', async (req, res, next) => {
     const id = req.params.id
 
     const user = await User.findOne({ username: id })
-    console.log('Trying to view bloglist for user: ', user.username)
-    console.log("User's liked blogposts: ", user.likedBlogs)
 
-    res.status(200).json(user.likedBlogs)
+    return res.status(200).json(user.likedBlogs)
 
   } catch(err) {
     next(err)
@@ -55,12 +58,10 @@ userRouter.get('/:id/blogs', async (req, res, next) => {
     const id = req.params.id
 
     const user = await User.findOne({ username: id })
-    console.log('Trying to view bloglist for user: ', user.username)
-    console.log("User's liked blogposts: ", user.likedBlogs)
 
     const userBlogsToDisplay = await Blog.find({ userId: user._id })
 
-    res.status(200).json(userBlogsToDisplay)
+    return res.status(200).json(userBlogsToDisplay)
 
   } catch(err) {
     next(err)
@@ -71,23 +72,20 @@ userRouter.get('/:id/blogs', async (req, res, next) => {
 userRouter.delete('/:id', middleware.userExtractor, async (req, res, next) => {
   const id = req.params.id
   const user = req.user
-  console.log("User resolved from token: ", user)
 
   // if user is authenticated and is trying to delete his own content
   if(user && (user.id === id)) {
+
     try {
-      console.log('request to delete user:', id)
       const userToDelete = user
       console.log('Trying to delete user: ', userToDelete.id)
 
-      // NEED TO CHECK IF THIS IS REDUNDANT
-      const userBlogsToRemove = user
-      console.log('User blogs which also need to be removed: ', userBlogsToRemove)
+      const userBlogsToRemove = user.blogs
 
       if(userBlogsToRemove.length === 0) {
         console.log('User blog array is empty. Delete the user.')
         await User.findByIdAndRemove(userToDelete._id)
-        res.status(204).end()
+        return res.status(204).end()
       }
 
       await Blog.deleteMany({ userId: userToDelete._id })
@@ -96,17 +94,18 @@ userRouter.delete('/:id', middleware.userExtractor, async (req, res, next) => {
       await User.findByIdAndRemove(userToDelete._id)
       console.log('User removed')
 
-      res.status(204).end()
+      return res.status(204).end()
     } catch(err) {
       next(err)
     }
   }
 
-  res.status(400).json({ error: "You must be logged in to perform this action." })
+  return res.status(400).json({ error: "You must be logged in to perform this action." })
 
 })
 // sign-up new user route
 userRouter.post('/', async (req, res, next) => {
+
   try {
     const { username, name, password } = req.body
     console.log('New user attempting to register: ', username, name, password)
@@ -128,7 +127,7 @@ userRouter.post('/', async (req, res, next) => {
 
     const savedUser = await user.save()
     console.log("Registration successful. User saved to DB.")
-    res.status(201).json(savedUser)
+    return res.status(201).json(savedUser)
 
   } catch(err) {
     next(err)

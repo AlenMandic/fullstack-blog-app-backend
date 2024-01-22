@@ -13,7 +13,7 @@ blogRouter.get("/", async (req, res) => {
 
   const blogs = await Blog.find({}).populate('userId', { username: 1, name: 1 }).skip(skip).limit(limit)
 
-  res.json(blogs)
+  return res.json(blogs)
 })
 
 // User can add a new blogpost
@@ -23,7 +23,6 @@ blogRouter.post("/", middleware.userExtractor, async (req, res, next) => {
 
   if(user) {
     try {
-      console.log("Logging request authorization header for protected route -> Posting to: /api/blogs/: ", req.headers.authorization)
       console.log('User is attempting to save blog: ', req.body)
 
       const blog = new Blog({
@@ -80,6 +79,50 @@ blogRouter.get("/:id", async (req, res, next) => {
     next(err)
   }
 })
+// adds a new comment from a logged in user to an individual blog post
+blogRouter.post("/:id/comments", middleware.userExtractor, async (req, res, next) => {
+
+  const id = req.params.id
+  const user = req.user
+  const commentContent = req.body.commentContent
+  console.log(id, user, commentContent)
+
+  if(user) {
+
+    try {
+
+      const blog = await Blog.findById(id);
+
+      if (!blog) {
+        return res.status(404).json({ error: 'Blog not found' });
+      }
+
+      console.log(user.username, 'is leaving a comment on blog: ', blog.title, 'the comment is: ', commentContent)
+
+      const newComment = {
+        postedBy: {
+          username: user.username,
+          id: user.id,
+        },
+        commentContent,
+      };
+
+      blog.comments.push(newComment);
+
+      await blog.save();
+      console.log('Comment and blog saved to db')
+
+      return res.status(201).json(newComment);
+
+    } catch(err) {
+      next(err)
+    }
+  }
+
+  return res.status(401).json({ error: "You must be logged in to comment." })
+
+})
+
 // User can delete his own individual blog posts if logged in.
 blogRouter.delete("/:id", middleware.userExtractor, async (req, res, next) => {
   const id = req.params.id
@@ -115,12 +158,13 @@ blogRouter.delete("/:id", middleware.userExtractor, async (req, res, next) => {
     }
   }
 
-  res.status(400).json({ error: "You must be logged in to delete." })
+  return res.status(401).json({ error: "You must be logged in to delete." })
 
 })
 
 // Activated via the like/unlike button. A logged in user can give 1 like to any blog on the explore page, and/or remove it after.
 blogRouter.put("/:id", middleware.userExtractor, async(req, res, next) => {
+
   const body = req.body
   const user = req.user
   const id = req.params.id
@@ -159,7 +203,7 @@ blogRouter.put("/:id", middleware.userExtractor, async(req, res, next) => {
     }
   }
 
-  return res.status(400).json({ error: "You must be logged in to perform this action." })
+  return res.status(401).json({ error: "You must be logged in to perform this action." })
 })
 
 module.exports = blogRouter

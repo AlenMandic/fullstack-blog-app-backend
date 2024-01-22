@@ -22,8 +22,8 @@ const userSchema = new mongoose.Schema({
   },
   blogs: [
     {
-      type: mongoose.Schema.Types.ObjectId, // this array will be filled with unique MongoDB object id's which refer to 'Blog' document.
-      ref: 'Blog' // indicates that every object in this array is one of our 'Blog' model collection. We can now point to this array from somewhere else using .populate('blogs'), replacing the ID's in this array with entire documents to which those ID's belong to.
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Blog' // references the 'Blog' model via the ID above
     }
   ],
   likedBlogs: [
