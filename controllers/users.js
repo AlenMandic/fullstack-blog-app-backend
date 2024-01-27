@@ -78,21 +78,17 @@ userRouter.delete('/:id', middleware.userExtractor, async (req, res, next) => {
 
     try {
       const userToDelete = user
-      console.log('Trying to delete user: ', userToDelete.id)
 
       const userBlogsToRemove = user.blogs
 
       if(userBlogsToRemove.length === 0) {
-        console.log('User blog array is empty. Delete the user.')
         await User.findByIdAndRemove(userToDelete._id)
         return res.status(204).end()
       }
 
       await Blog.deleteMany({ userId: userToDelete._id })
-      console.log('Removed user blogs')
 
       await User.findByIdAndRemove(userToDelete._id)
-      console.log('User removed')
 
       return res.status(204).end()
     } catch(err) {
@@ -108,10 +104,8 @@ userRouter.post('/', async (req, res, next) => {
 
   try {
     const { username, name, password } = req.body
-    console.log('New user attempting to register: ', username, name, password)
 
     if(!(isStrongPassword(password))) {
-      console.log("Registration failed.")
       return res.status(400).json({ error: 'Password must be 15 characters or more and include 1 capital letter, 1 number, and 1 special character!' })
     }
 
@@ -126,7 +120,6 @@ userRouter.post('/', async (req, res, next) => {
     })
 
     const savedUser = await user.save()
-    console.log("Registration successful. User saved to DB.")
     return res.status(201).json(savedUser)
 
   } catch(err) {

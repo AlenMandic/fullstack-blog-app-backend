@@ -32,7 +32,6 @@ app.use(
 // connect to our mongo database.
 const mongoUrl = config.MONGODB_URL
 mongoose.set('strictQuery', false)
-logger.info('connecting to: ', mongoUrl)
 
 mongoose.connect(mongoUrl).then(() => {
   logger.info('Connected to MongoDB database')

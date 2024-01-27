@@ -24,16 +24,13 @@ const userExtractor = async (request, response, next) => {
 
   try {
     const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-    console.log("Decoded token for user: ", decodedToken.username)
 
     if(!(decodedToken.id)) {
-      console.log("Token didn't have id field. Denied.")
       return response.status(401).json({ error: "Invalid token. Access denied." })
     }
 
     const user = await User.findById(decodedToken.id)
 
-    console.log('User making the request: ', user.username, user._id)
     request.user = user // add a new field to the received request before it reaches our router which contains whoever is making the request.
 
     next()  // now our routes will have the user and we can move on to next middlewares

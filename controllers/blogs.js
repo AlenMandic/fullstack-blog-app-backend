@@ -9,7 +9,7 @@ blogRouter.get("/", async (req, res) => {
   const skip = (page - 1) * limit  // pagination skipper.
 
   page = parseInt(page) || 1
-  limit = parseInt(limit) || 5
+  limit = parseInt(limit) || 10
 
   const blogs = await Blog.find({}).populate('userId', { username: 1, name: 1 }).skip(skip).limit(limit)
 
@@ -23,7 +23,6 @@ blogRouter.post("/", middleware.userExtractor, async (req, res, next) => {
 
   if(user) {
     try {
-      console.log('User is attempting to save blog: ', req.body)
 
       const blog = new Blog({
         title: req.body.title,
@@ -85,7 +84,6 @@ blogRouter.post("/:id/comments", middleware.userExtractor, async (req, res, next
   const id = req.params.id
   const user = req.user
   const commentContent = req.body.commentContent
-  console.log(id, user, commentContent)
 
   if(user) {
 
@@ -96,8 +94,6 @@ blogRouter.post("/:id/comments", middleware.userExtractor, async (req, res, next
       if (!blog) {
         return res.status(404).json({ error: 'Blog not found' });
       }
-
-      console.log(user.username, 'is leaving a comment on blog: ', blog.title, 'the comment is: ', commentContent)
 
       const newComment = {
         postedBy: {
@@ -110,7 +106,6 @@ blogRouter.post("/:id/comments", middleware.userExtractor, async (req, res, next
       blog.comments.push(newComment);
 
       await blog.save();
-      console.log('Comment and blog saved to db')
 
       return res.status(201).json(newComment);
 
@@ -132,14 +127,12 @@ blogRouter.delete("/:id", middleware.userExtractor, async (req, res, next) => {
     try {
 
       const userToUpdateArray = user
-      console.log('trying to update user blog-array after deletion for: ', userToUpdateArray)
 
       const blogIndex = userToUpdateArray.blogs.indexOf(id)
 
       // if blog exists in user's blog array
       if(blogIndex !== -1) {
         const blogToDelete = userToUpdateArray.blogs[blogIndex]
-        console.log("Trying to find and delete this blog from user's blog array: ", blogToDelete)
 
         await User.findByIdAndUpdate(
           userToUpdateArray,
@@ -149,7 +142,6 @@ blogRouter.delete("/:id", middleware.userExtractor, async (req, res, next) => {
 
         await Blog.findOneAndDelete(blogToDelete)
 
-        console.log('Updated users blog array and removed blog')
         return res.status(204).end()
       }
 
@@ -168,7 +160,6 @@ blogRouter.put("/:id", middleware.userExtractor, async(req, res, next) => {
   const body = req.body
   const user = req.user
   const id = req.params.id
-  console.log("User is attempting to like/unlike: ", user.username, "------blog to like/unlike: ", id)
 
   if(user) {
     try {
@@ -177,25 +168,20 @@ blogRouter.put("/:id", middleware.userExtractor, async(req, res, next) => {
       const isLiked = user.likedBlogs.includes(id)
 
       const blogToUpdate = await Blog.findById(id)
-      console.log("before likes updated:", blogToUpdate)
 
       const newLikes = body.likes
 
       if(isLiked) {
-        console.log("Blog already liked, removing it from liked blogs.")
         user.likedBlogs = user.likedBlogs.filter(likedBlogId => likedBlogId.toString() !== id);
       } else {
-        console.log("Blog not liked, adding it to list of liked blogs.")
         user.likedBlogs.push(id)
       }
 
       await user.save()  // updated user liked blogs information
 
       blogToUpdate.likes = newLikes
-      console.log('after likes updated:', blogToUpdate)
 
       const updatedBlog = await Blog.findByIdAndUpdate(id, blogToUpdate, { new: true, runValidators: true, context: 'query' })
-      console.log("updated blog: ", updatedBlog)
       return res.json(updatedBlog)
 
     } catch(err) {
