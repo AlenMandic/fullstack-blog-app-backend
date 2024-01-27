@@ -39,8 +39,8 @@
 # User authentication / App security
 - When a user is creating an account, a strong minimum 15 character password with atleast: 1 capital letter, 1 number and 1 special character is enforced.
 - All of our inputs/forms are sanitized/validated both on the front-end repository, and this one, using `mongoose` and the `mongoose-unique-validator` package
-- Passwords are hashed and encrypted using the `bycrypt` package. We only store the password hash to our database, never the actual password!
+- Passwords are hashed and salted/encrypted using the `bycrypt` package.
 - When a user attempts to log in, we first make sure the password is correct using `bcrypt.compare` function. If the credentials are good, the user will receive back a JSON web token which has a 1 hour expiry date, and contains his username and id. The front-end will then be able to work with the authenticated user and his information.
-- Each token is signed with our secret variable.
+- Each token is signed/checked against our secret variable.
 
 - When working with JSON web tokens XSS attacks(cross-site-scripting, malicious script injections) are always a cause for concern. In order to best secure my application and prevent those attacks, our app uses the 'helmet` package which is recommended by Express to mitigate some well-known web vulnerabilities by setting HTTP headers appropriately, including  cross-site scripting attacks.
